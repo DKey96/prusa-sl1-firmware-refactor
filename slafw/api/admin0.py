@@ -14,7 +14,7 @@ from slafw.admin.items import AdminAction, AdminIntValue, AdminFloatValue, Admin
     AdminFixedValue, AdminSelectionValue
 from slafw.admin.manager import AdminManager
 from slafw.admin.menu import AdminMenu
-from slafw.admin.menus.root import RootMenu
+from slafw.admin.menus.contexts.root import RootMenuContext
 from slafw.api.decorators import DBusObjectPath, dbus_api, auto_dbus, auto_dbus_signal
 from slafw.errors.errors import NotAvailableInState, AdminNotAvailable
 from slafw.libPrinter import Printer
@@ -471,7 +471,7 @@ class Admin0:
             raise NotAvailableInState(self._printer.state, self.ALLOWED_ENTER_STATES)
         if not self._printer.runtime_config.show_admin:
             raise AdminNotAvailable()
-        self._manager.enter(RootMenu(self._manager, self._printer))
+        self._manager.enter(RootMenuContext(self._manager, self._printer))
 
     @auto_dbus
     @property
