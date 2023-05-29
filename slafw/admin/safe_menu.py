@@ -6,7 +6,7 @@ import functools
 from typing import Callable
 
 from slafw.admin.menu import AdminMenu
-from slafw.admin.menus.dialogs import Error
+from slafw.admin.menus.common.dialogs import Error
 
 
 class SafeAdminMenu(AdminMenu):

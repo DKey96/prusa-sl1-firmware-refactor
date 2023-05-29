@@ -4,17 +4,17 @@
 
 import logging
 import subprocess
-from typing import Optional
 from time import sleep
+from typing import Optional
 
 from slafw import defines
 from slafw.admin.control import AdminControl
-from slafw.admin.items import AdminBoolValue, AdminAction, AdminLabel
-from slafw.admin.menus.dialogs import Error, Info, Wait
+from slafw.admin.items import AdminLabel
+from slafw.admin.menus.common.dialogs import Error, Info, Wait
 from slafw.admin.safe_menu import SafeAdminMenu
 from slafw.errors.errors import FailedToSetLogLevel
-from slafw.logger_config import get_log_level, set_log_level
 from slafw.libPrinter import Printer
+from slafw.logger_config import get_log_level, set_log_level
 from slafw.state_actions.logs import ServerUploadLogs
 from slafw.states.data_export import ExportState
 
@@ -28,13 +28,6 @@ class LoggingMenu(SafeAdminMenu):
         self._status: Optional[AdminLabel] = None
 
         self.add_back()
-        self.add_items(
-            (
-                AdminBoolValue("Debug logging", self._get_debug_enabled, self._set_debug_enabled, "logs-icon"),
-                AdminAction("Truncate logs", self._truncate_logs, "delete_small_white"),
-                AdminAction("Upload to Cucek", self._upload_dev, "upload_cloud_color"),
-            )
-        )
 
     @staticmethod
     def _get_debug_enabled() -> bool:
@@ -62,11 +55,11 @@ class LoggingMenu(SafeAdminMenu):
         status.set("Truncating logs")
         try:
             completed_process = subprocess.run(
-                    [defines.script_dir / "truncate_logs.sh", "60s"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    text=True,
-                    check=True,
+                [defines.script_dir / "truncate_logs.sh", "60s"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                check=True,
             )
         except Exception as e:
             self.logger.exception("truncate_logs exception: %s", str(e))
@@ -96,8 +89,8 @@ class LoggingMenu(SafeAdminMenu):
             self._control.enter(Info(self._control, "Logs was uploaded successfully", pop=2))
         else:
             self._control.enter(Error(self._control,
-                text=exporter.format_exception(),
-                headline="Failed to upload logs"))
+                                      text=exporter.format_exception(),
+                                      headline="Failed to upload logs"))
 
     def _state_callback(self, state: ExportState):
         self._status.set(state.name)

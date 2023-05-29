@@ -6,8 +6,8 @@ from functools import partial
 
 from slafw import defines
 from slafw.admin.control import AdminControl
-from slafw.admin.items import AdminAction, AdminLabel
-from slafw.admin.menus.dialogs import Info, Confirm, Wait
+from slafw.admin.items import AdminLabel
+from slafw.admin.menus.common.dialogs import Info, Confirm, Wait
 from slafw.admin.safe_menu import SafeAdminMenu
 from slafw.errors.errors import NotConnected
 from slafw.libPrinter import Printer
@@ -20,14 +20,6 @@ class MotionControllerMenu(SafeAdminMenu):
         self._printer = printer
 
         self.add_back()
-        self.add_items(
-            (
-                AdminAction("Flash MC", self.flash_mc, "firmware-icon"),
-                AdminAction("Erase MC EEPROM", self.erase_mc_eeprom, "delete_small_white"),
-                AdminAction("MC2Net (bootloader)", self.mc2net_boot, "remote_small_white"),
-                AdminAction("MC2Net (firmware)", self.mc2net_firmware, "remote_control_color"),
-            ),
-        )
 
     def flash_mc(self):
         self._control.enter(
@@ -97,9 +89,9 @@ class MotionControllerMenu(SafeAdminMenu):
                 self._control,
                 headline="Listening for motion controller debugging connection.",
                 text=f"Serial line is redirected to {ip}:{defines.mc_debug_port}.\n\n"
-                "Press continue to use the printer. The debugging will\n"
-                "begin with new connection and will end as soon as\n"
-                "the connection terminates.",
+                     "Press continue to use the printer. The debugging will\n"
+                     "begin with new connection and will end as soon as\n"
+                     "the connection terminates.",
                 pop=2,
             )
         )

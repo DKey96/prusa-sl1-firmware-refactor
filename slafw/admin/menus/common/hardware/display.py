@@ -3,18 +3,18 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 from datetime import timedelta
-from itertools import chain
 from functools import partial
+from itertools import chain
 from pathlib import Path
 
 from slafw import defines
-from slafw.libPrinter import Printer
 from slafw.admin.control import AdminControl
 from slafw.admin.items import AdminAction, AdminBoolValue
+from slafw.admin.menus.common.dialogs import Info, Confirm
 from slafw.admin.safe_menu import SafeAdminMenu
-from slafw.admin.menus.dialogs import Info, Confirm
 from slafw.functions import files, generate
 from slafw.image import cairo
+from slafw.libPrinter import Printer
 
 
 class ExposureDisplayMenu(SafeAdminMenu):
@@ -23,23 +23,6 @@ class ExposureDisplayMenu(SafeAdminMenu):
         self._printer = printer
 
         self.add_back()
-        self.add_items(
-            (
-                AdminAction(
-                    "Exposure display control",
-                    lambda: self._control.enter(DisplayControlMenu(self._control, self._printer)),
-                    "display_test_color"
-                ),
-                AdminAction("Display usage heatmap", self.display_usage_heatmap, "frequency"),
-                AdminAction(
-                    "Show UV calibration data",
-                    lambda: self._control.enter(ShowCalibrationMenu(self._control)),
-                    "logs-icon"
-                ),
-                AdminAction("Erase display counter", self.erase_display_counter, "display_replacement"),
-                AdminAction("Erase UV LED counter", self.erase_uv_led_counter, "led_set_replacement"),
-            )
-        )
 
     @SafeAdminMenu.safe_call
     def erase_uv_led_counter(self):
@@ -51,8 +34,8 @@ class ExposureDisplayMenu(SafeAdminMenu):
                 self._do_erase_uv_led_counter,
                 headline="Do you really want to clear the UV LED counter?",
                 text=f"UV counter: {timedelta(seconds=self._printer.hw.uv_led.usage_s)}\n"
-                f"Serial number: {self._printer.hw.cpuSerialNo}\n"
-                f"IP address: {self._printer.inet.ip}",
+                     f"Serial number: {self._printer.hw.cpuSerialNo}\n"
+                     f"IP address: {self._printer.inet.ip}",
             )
         )
 
@@ -63,8 +46,8 @@ class ExposureDisplayMenu(SafeAdminMenu):
                 self._control,
                 headline="UV counter has been erased.",
                 text=f"UV counter: {timedelta(seconds=self._printer.hw.uv_led.usage_s)}\n"
-                f"Serial number: {self._printer.hw.cpuSerialNo}\n"
-                f"IP address: {self._printer.inet.ip}",
+                     f"Serial number: {self._printer.hw.cpuSerialNo}\n"
+                     f"IP address: {self._printer.inet.ip}",
             )
         )
 
@@ -80,8 +63,8 @@ class ExposureDisplayMenu(SafeAdminMenu):
                 self._do_erase_display_counter,
                 headline="Do you really want to clear the Display counter?",
                 text=f"Display counter: {timedelta(seconds=self._printer.hw.exposure_screen.usage_s)}\n"
-                f"Serial number: {self._printer.hw.cpuSerialNo}\n"
-                f"IP address: {self._printer.inet.ip}",
+                     f"Serial number: {self._printer.hw.cpuSerialNo}\n"
+                     f"IP address: {self._printer.inet.ip}",
             )
         )
 
@@ -92,18 +75,18 @@ class ExposureDisplayMenu(SafeAdminMenu):
                 self._control,
                 headline="Display counter has been erased.",
                 text=f"Display counter: {timedelta(seconds=self._printer.hw.exposure_screen.usage_s)}\n"
-                f"Serial number: {self._printer.hw.cpuSerialNo}\n"
-                f"IP address: {self._printer.inet.ip}",
+                     f"Serial number: {self._printer.hw.cpuSerialNo}\n"
+                     f"IP address: {self._printer.inet.ip}",
             )
         )
 
     @SafeAdminMenu.safe_call
     def display_usage_heatmap(self):
         generate.display_usage_heatmap(
-                self._printer.hw.exposure_screen.parameters,
-                defines.displayUsageData,
-                defines.displayUsagePalette,
-                defines.fullscreenImage)
+            self._printer.hw.exposure_screen.parameters,
+            defines.displayUsageData,
+            defines.displayUsagePalette,
+            defines.fullscreenImage)
         self._control.fullscreen_image()
 
 
@@ -113,14 +96,14 @@ class ShowCalibrationMenu(SafeAdminMenu):
 
         self.add_back()
         data_paths = (
-                defines.wizardHistoryPathFactory.glob("uvcalib_data.*"),
-                defines.wizardHistoryPathFactory.glob("uvcalibrationwizard_data.*"),
-                defines.wizardHistoryPathFactory.glob("uv_calibration_data.*"),
-                defines.wizardHistoryPathFactory.glob(f"{defines.manual_uvc_filename}.*"),
-                defines.wizardHistoryPath.glob("uvcalib_data.*"),
-                defines.wizardHistoryPath.glob("uvcalibrationwizard_data.*"),
-                defines.wizardHistoryPath.glob("uv_calibration_data.*"),
-                )
+            defines.wizardHistoryPathFactory.glob("uvcalib_data.*"),
+            defines.wizardHistoryPathFactory.glob("uvcalibrationwizard_data.*"),
+            defines.wizardHistoryPathFactory.glob("uv_calibration_data.*"),
+            defines.wizardHistoryPathFactory.glob(f"{defines.manual_uvc_filename}.*"),
+            defines.wizardHistoryPath.glob("uvcalib_data.*"),
+            defines.wizardHistoryPath.glob("uvcalibrationwizard_data.*"),
+            defines.wizardHistoryPath.glob("uv_calibration_data.*"),
+        )
         filenames = sorted(list(chain(*data_paths)), key=lambda path: path.stat().st_mtime, reverse=True)
         if filenames:
             for fn in filenames:

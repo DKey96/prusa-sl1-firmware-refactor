@@ -5,14 +5,13 @@
 from time import sleep
 
 from slafw.admin.control import AdminControl
-from slafw.admin.items import AdminAction, AdminLabel
-from slafw.admin.menus.dialogs import Wait, Error
-from slafw.admin.menus.hardware.profiles import Profiles
+from slafw.admin.items import AdminLabel
+from slafw.admin.menus.common.dialogs import Wait, Error
 from slafw.admin.safe_menu import SafeAdminMenu
-from slafw.libPrinter import Printer
 from slafw.errors.errors import TiltHomeFailed, TowerHomeFailed
-from slafw.hardware.power_led_action import WarningAction
 from slafw.hardware.axis import Axis
+from slafw.hardware.power_led_action import WarningAction
+from slafw.libPrinter import Printer
 
 
 class AxisMenu(SafeAdminMenu):
@@ -22,26 +21,11 @@ class AxisMenu(SafeAdminMenu):
         self._axis = axis
 
         self.add_back()
-        self.add_items(
-            (
-                AdminAction(f"Release {axis.name} motor", self.release_motor, "disable_steppers_color"),
-                AdminAction(f"Home {axis.name}", self.home, "home_small_white"),
-                AdminAction(f"Move {axis.name} to calibrated position", self.config_position, "finish_white"),
-                AdminAction(f"Manual {axis.name} move", self.manual_move, "control_color"),
-                AdminAction(
-                    f"{axis.name.capitalize()} profiles",
-                    lambda: self.enter(Profiles(self._control, printer, axis.profiles, axis)),
-                    "steppers_color"
-                 ),
-                AdminAction("Home calibration", self.home_calib, "calibration_color"),
-                AdminAction(f"Test {axis.name}", self.test, "limit_color"),
-            )
-        )
 
     def _move_to_home(self, status: AdminLabel):
         if self._axis.synced:
             status.set(f"Moving {self._axis.name} to home position")
-            self._axis.actual_profile = self._axis.profiles.homingFast    # type: ignore
+            self._axis.actual_profile = self._axis.profiles.homingFast  # type: ignore
             self._axis.move_ensure(self._axis.home_position)
         else:
             status.set(f"Homing {self._axis.name}")
@@ -54,7 +38,7 @@ class AxisMenu(SafeAdminMenu):
         return True
 
     def _move_to_home_opposite(self, status: AdminLabel):
-        self._axis.actual_profile = self._axis.profiles.homingFast    # type: ignore
+        self._axis.actual_profile = self._axis.profiles.homingFast  # type: ignore
         if self._axis.home_position:
             status.set(f"Moving {self._axis.name} to minimal position")
             self._axis.move_ensure(self._axis.minimal_position)

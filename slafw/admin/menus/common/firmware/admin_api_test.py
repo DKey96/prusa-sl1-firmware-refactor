@@ -14,7 +14,7 @@ from slafw.admin.items import (
     AdminSelectionValue,
 )
 from slafw.admin.menu import AdminMenu
-from slafw.admin.menus.dialogs import Error, Info, Confirm, Wait
+from slafw.admin.menus.common.dialogs import Error, Info, Confirm, Wait
 
 
 class ApiTestMenu(AdminMenu):
@@ -44,7 +44,7 @@ class ApiTestMenu(AdminMenu):
         self.add_item(AdminAction("Confirm", self.confirm))
         self.add_item(AdminAction("Wait", self.wait))
         self.add_item(AdminSelectionValue("Select (wrap)", self.get_index, self.set_index,
-            ["First item", "Second item", "Third item", "Fourth item"], wrap_around=True))
+                                          ["First item", "Second item", "Third item", "Fourth item"], wrap_around=True))
 
         self._thread = Thread(target=self._runner)
 

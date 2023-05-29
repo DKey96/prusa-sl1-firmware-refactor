@@ -2,14 +2,11 @@
 # Copyright (C) 2022 Prusa Development a.s. - www.prusa3d.com
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from typing import Collection, Optional
+import re
 from pathlib import Path
 from time import sleep
-import re
+from typing import Collection, Optional
 
-from slafw.defines import dataPath
-from slafw.libPrinter import Printer
-from slafw.hardware.profiles import SingleProfile, ProfileSet
 from slafw.admin.control import AdminControl
 from slafw.admin.items import (
     AdminItem,
@@ -20,20 +17,24 @@ from slafw.admin.items import (
     AdminBoolValue,
     AdminFixedValue,
 )
-from slafw.admin.safe_menu import SafeAdminMenu
 from slafw.admin.menu import AdminMenu
-from slafw.admin.menus.dialogs import Info, Wait, Error
-from slafw.hardware.axis import Axis
-from slafw.hardware.tower import MovingProfilesTower
-from slafw.hardware.tilt import MovingProfilesTilt
-from slafw.hardware.power_led_action import WarningAction
-from slafw.functions.files import get_save_path, usb_remount, get_export_file_name
-from slafw.errors.errors import NoExternalStorage, TiltHomeFailed
-from slafw.configs.value import ProfileIndex, BoolValue
+from slafw.admin.menus.common.dialogs import Info, Wait, Error
+from slafw.admin.safe_menu import SafeAdminMenu
 from slafw.configs.unit import Nm, Ms
+from slafw.configs.value import ProfileIndex, BoolValue
+from slafw.defines import dataPath
+from slafw.errors.errors import NoExternalStorage, TiltHomeFailed
 from slafw.exposure.profiles import ExposureProfilesSL1, LayerProfilesSL1
+from slafw.functions.files import get_save_path, usb_remount, get_export_file_name
+from slafw.hardware.axis import Axis
+from slafw.hardware.power_led_action import WarningAction
+from slafw.hardware.profiles import SingleProfile, ProfileSet
+from slafw.hardware.tilt import MovingProfilesTilt
+from slafw.hardware.tower import MovingProfilesTower
+from slafw.libPrinter import Printer
 
 CAMEL2SNAKE = re.compile(r'(?<!^)(?=[A-Z])')
+
 
 def pretty_name(name: str) -> str:
     name = CAMEL2SNAKE.sub('_', name).lower()
@@ -42,36 +43,20 @@ def pretty_name(name: str) -> str:
     return name.capitalize()
 
 
-class Profiles(SafeAdminMenu):
+class ProfilesMenu(SafeAdminMenu):
     def __init__(self, control: AdminControl, printer: Printer, pset: ProfileSet, axis: Optional[Axis] = None):
         super().__init__(control)
         self._printer = printer
         self._pset = pset
 
         self.add_back()
-        self.add_items(
-            (
-                AdminAction(
-                    f"Edit {pset.name}",
-                    lambda: self.enter(EditProfiles(self._control, printer, pset, axis)),
-                    "edit_white"
-                ),
-                AdminAction(
-                    f"Import {pset.name}",
-                    lambda: self.enter(ImportProfiles(self._control, pset)),
-                    "save_color"
-                ),
-                AdminAction(f"Save {pset.name} to USB drive", self.save_to_usb, "usb_color"),
-                AdminAction(f"Restore to factory {pset.name}", self.factory_profiles, "factory_color"),
-            )
-        )
 
     @SafeAdminMenu.safe_call
     def save_to_usb(self):
         save_path = get_save_path()
         if save_path is None or not save_path.parent.exists():
             raise NoExternalStorage()
-        model_name = self._printer.hw.printer_model.name    # type: ignore[attr-defined]
+        model_name = self._printer.hw.printer_model.name  # type: ignore[attr-defined]
         fn = f"{self._pset.name.replace(' ', '_')}-{model_name}.{get_export_file_name(self._printer.hw)}.json"
         usb_remount(str(save_path / fn))
         self._pset.write_factory(save_path / fn, nondefault=True)
@@ -104,21 +89,21 @@ class EditProfiles(AdminMenu):
             yield AdminAction(pretty_name(profile.name), self._get_callback(printer, pset, profile, axis), icon)
 
     def _get_callback(self,
-            printer: Printer,
-            pset: ProfileSet,
-            profile: SingleProfile,
-            axis: Optional[Axis] = None):
+                      printer: Printer,
+                      pset: ProfileSet,
+                      profile: SingleProfile,
+                      axis: Optional[Axis] = None):
         return lambda: self._control.enter(EditProfileItems(self._control, printer, pset, profile, axis))
 
 
 class EditProfileItems(SafeAdminMenu):
     # pylint: disable = too-many-arguments
     def __init__(self,
-            control: AdminControl,
-            printer: Printer,
-            pset: ProfileSet,
-            profile: SingleProfile,
-            axis: Optional[Axis] = None):
+                 control: AdminControl,
+                 printer: Printer,
+                 pset: ProfileSet,
+                 profile: SingleProfile,
+                 axis: Optional[Axis] = None):
         super().__init__(control)
         self._printer = printer
         self._axis = axis
@@ -141,11 +126,11 @@ class EditProfileItems(SafeAdminMenu):
             name = pretty_name(value.key)
             if isinstance(value, ProfileIndex):
                 yield AdminSelectionValue.from_value(
-                        name, self._temp, value.key, [pretty_name(n) for n in value.options], True, "edit_white")
+                    name, self._temp, value.key, [pretty_name(n) for n in value.options], True, "edit_white")
             elif isinstance(value, BoolValue):
                 yield AdminBoolValue.from_value(name, self._temp, value.key, "edit_white")
-# TODO python 3.10
-#            elif value.unit is not None and issubclass(value.unit, Nm | Ms):
+            # TODO python 3.10
+            #            elif value.unit is not None and issubclass(value.unit, Nm | Ms):
             elif value.unit is not None and any((issubclass(value.unit, Nm), issubclass(value.unit, Ms))):
                 yield AdminFixedValue.from_value(name, self._temp, value.key, icon="edit_white")
             else:

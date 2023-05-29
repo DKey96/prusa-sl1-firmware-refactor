@@ -8,29 +8,19 @@ from time import sleep
 from slafw.admin.control import AdminControl
 from slafw.admin.items import AdminAction, AdminTextValue
 from slafw.admin.menu import AdminMenu
-from slafw.admin.menus.dialogs import Error, Confirm, Info
+from slafw.admin.menus.common.dialogs import Error, Confirm, Info
+from slafw.admin.menus.common.root import Root
 from slafw.configs.unit import Ustep
-from slafw.libPrinter import Printer
-from slafw.libUvLedMeterMulti import UvLedMeterMulti
 from slafw.errors.errors import TiltHomeFailed, TowerHomeFailed
 from slafw.hardware.power_led_action import WarningAction
 from slafw.image.cairo import draw_chess
+from slafw.libPrinter import Printer
+from slafw.libUvLedMeterMulti import UvLedMeterMulti
 
 
-class HardwareTestMenu(AdminMenu):
+class HardwareTestMenu(Root):
     def __init__(self, control: AdminControl, printer: Printer):
-        super().__init__(control)
-        self._printer = printer
-
-        self.add_back()
-        self.add_items(
-            (
-                AdminAction("Resin sensor test", self.resin_sensor_test, "refill_color"),
-                AdminAction("Infinite UV calibrator test", self.infinite_uv_calibrator_test, "uv_calibration"),
-                AdminAction("Infinite complex test", self.infinite_test, "restart"),
-                AdminAction("Touchscreen test", self._control.touchscreen_test, "touchscreen-icon"),
-            )
-        )
+        super().__init__(control, printer)
 
     def resin_sensor_test(self):
         self._control.enter(
@@ -38,7 +28,7 @@ class HardwareTestMenu(AdminMenu):
                 self._control,
                 self.do_resin_sensor_test,
                 text="Is there the correct amount of resin in the tank?\n"
-                    "Is the tank secured with both screws?",
+                     "Is the tank secured with both screws?",
             )
         )
 
@@ -54,8 +44,8 @@ class HardwareTestMenu(AdminMenu):
                 self._control,
                 self.do_infinite_test,
                 text="It is strongly recommended to NOT run this test.\n"
-                    "This is an infinite routine which tests durability\n"
-                    "of exposition display and mechanical parts.",
+                     "This is an infinite routine which tests durability\n"
+                     "of exposition display and mechanical parts.",
             )
         )
 

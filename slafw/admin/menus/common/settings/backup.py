@@ -2,34 +2,34 @@
 # Copyright (C) 2020-2022 Prusa Development a.s. - www.prusa3d.com
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from functools import partial
 import json
 import re
 import tempfile
+from functools import partial
+from logging import Logger
+from os import remove
 from pathlib import Path
+from shutil import copy2, copyfile, make_archive, unpack_archive
 from threading import Thread
 from time import sleep
-from shutil import copy2, copyfile, make_archive, unpack_archive
-from os import remove
-from logging import Logger
+
+from slafw.hardware.tilt_profiles import TILT_CFG_LOCAL
+from slafw.hardware.tower_profiles import TOWER_CFG_LOCAL
 
 from slafw import defines
-from slafw.libPrinter import Printer
 from slafw.admin.control import AdminControl
 from slafw.admin.items import AdminAction, AdminLabel, AdminTextValue
-from slafw.admin.menu import AdminMenu
+from slafw.admin.menus.common.dialogs import Confirm, Error, Info, Wait
+from slafw.admin.menus.common.root import Root
 from slafw.admin.safe_menu import SafeAdminMenu
-from slafw.admin.menus.dialogs import Confirm, Error, Info, Wait
-from slafw.functions.system import FactoryMountedRW, shut_down
-from slafw.functions.files import get_export_file_name, get_save_path
 from slafw.errors.errors import ConfigException
+from slafw.exposure.profiles import LAYER_PROFILES_LOCAL, EXPOSURE_PROFILES_LOCAL
+from slafw.functions.files import get_export_file_name, get_save_path
+from slafw.functions.system import FactoryMountedRW, shut_down
+from slafw.hardware.hardware import BaseHardware
+from slafw.libPrinter import Printer
 from slafw.state_actions.data_export import DataExport, UsbExport, ServerUpload
 from slafw.states.data_export import ExportState
-from slafw.hardware.hardware import BaseHardware
-from slafw.hardware.sl1.tower_profiles import TOWER_CFG_LOCAL
-from slafw.hardware.sl1.tilt_profiles import TILT_CFG_LOCAL
-from slafw.exposure.profiles import LAYER_PROFILES_LOCAL, EXPOSURE_PROFILES_LOCAL
-
 
 factory_configs = [
     defines.hwConfigPathFactory,
@@ -40,7 +40,7 @@ factory_configs = [
 user_configs = [
     defines.hwConfigPath,
     defines.loggingConfig,
-    TOWER_CFG_LOCAL,        # TODO based on printer model
+    TOWER_CFG_LOCAL,  # TODO based on printer model
     TILT_CFG_LOCAL,
     LAYER_PROFILES_LOCAL,
     EXPOSURE_PROFILES_LOCAL,
@@ -51,29 +51,10 @@ user_export_dir = "user"
 
 config_api_url = "http://cucek.prusa/api/"
 
-class BackupConfigMenu(AdminMenu):
+
+class BackupConfigMenu(Root):
     def __init__(self, control: AdminControl, printer: Printer):
-        super().__init__(control)
-        self._printer = printer
-        self.add_back()
-        self.add_items(
-            (
-                AdminAction("Restore configuration from factory defaults", self.reset_to_defaults, "factory_color"),
-                AdminAction("Save configuration as factory defaults", self.save_as_defaults, "save_color"),
-                AdminAction(
-                    "Restore configuration from USB drive",
-                    lambda: self._control.enter(RestoreFromUsbMenu(self._control, self._printer)),
-                    "usb_color"
-                ),
-                AdminAction("Save configuration to USB drive", self.save_to_usb, "usb_color"),
-                AdminAction(
-                    "Restore configuration from network",
-                    lambda: self._control.enter(RestoreFromNetMenu(self._control, self._printer)),
-                    "download"
-                ),
-                AdminAction("Save configuration to network", self.save_to_net, "upload_cloud_color"),
-            ),
-        )
+        super().__init__(control, printer)
 
     def reset_to_defaults(self):
         self._control.enter(
@@ -87,7 +68,7 @@ class BackupConfigMenu(AdminMenu):
             config.read_file()
             config.factory_reset()
             config.showUnboxing = False
-            config.vatRevision = self._printer.hw.printer_model.options.vat_revision    # type: ignore[attr-defined]
+            config.vatRevision = self._printer.hw.printer_model.options.vat_revision  # type: ignore[attr-defined]
             self._printer.hw.uv_led.pwm = self._printer.hw.config.uvPwmPrint
             config.write()
         except ConfigException:
@@ -126,8 +107,8 @@ class BackupConfigMenu(AdminMenu):
             self._control.enter(Info(self._control, "Configs was saved successfully", pop=2))
         else:
             self._control.enter(Error(self._control,
-                text=exporter.format_exception(),
-                headline="Failed to save configs"))
+                                      text=exporter.format_exception(),
+                                      headline="Failed to save configs"))
 
     def save_to_net(self):
         self.enter(Wait(self._control, self._do_save_to_net))
@@ -144,8 +125,8 @@ class BackupConfigMenu(AdminMenu):
             self._control.enter(Info(self._control, "Configs was uploaded successfully", pop=2))
         else:
             self._control.enter(Error(self._control,
-                text=exporter.format_exception(),
-                headline="Failed to upload configs"))
+                                      text=exporter.format_exception(),
+                                      headline="Failed to upload configs"))
 
 
 async def do_export(parent: DataExport, tmpdir_path: Path) -> Path:
@@ -164,7 +145,7 @@ async def do_export(parent: DataExport, tmpdir_path: Path) -> Path:
             copy2(src, user_path, follow_symlinks=False)
         else:
             parent.logger.warning("Not exporting nonexistent file '%s'", src)
-    tar_file = tmpdir_path / f"{filenamebase}{parent.hw.printer_model.name}.{get_export_file_name(parent.hw)}" # type: ignore[attr-defined]
+    tar_file = tmpdir_path / f"{filenamebase}{parent.hw.printer_model.name}.{get_export_file_name(parent.hw)}"  # type: ignore[attr-defined]
     return Path(make_archive(tar_file, 'xztar', tar_root, logger=parent.logger))
 
 
@@ -215,7 +196,7 @@ class RestoreFromUsbMenu(SafeAdminMenu):
             if name in ["SL1S", "M1"]:
                 filters = [filenamebase + "SL1S.*.tar.xz", filenamebase + "M1.*.tar.xz"]
             else:
-                filters = [filenamebase + f"{name}.*.tar.xz",]
+                filters = [filenamebase + f"{name}.*.tar.xz", ]
             self.list_files(usb_path, filters, self._confirm_restore, "usb_color")
 
     def _confirm_restore(self, path: Path, name: str):
@@ -265,11 +246,11 @@ class RestoreFromNetMenu(SafeAdminMenu):
             configs = json.load(tf)["results"]
             self.add_items(
                 [
-                     AdminAction(
-                         config["tar"],
-                         partial(self._confirm_restore, config["id"], config["tar"]),
-                         "download")
-                     for config in configs if regex.fullmatch(config["tar"])
+                    AdminAction(
+                        config["tar"],
+                        partial(self._confirm_restore, config["id"], config["tar"]),
+                        "download")
+                    for config in configs if regex.fullmatch(config["tar"])
                 ]
             )
         self.del_item(self.items["status"])

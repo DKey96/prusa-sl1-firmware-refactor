@@ -6,9 +6,9 @@ import functools
 import json
 import logging
 import tempfile
+from os import unlink
 from threading import Thread
 from time import sleep
-from os import unlink
 
 import distro
 import pydbus
@@ -16,20 +16,19 @@ import pydbus
 from slafw.admin.control import AdminControl
 from slafw.admin.items import AdminAction, AdminTextValue
 from slafw.admin.menu import AdminMenu
-from slafw.admin.menus.dialogs import Error, Confirm
+from slafw.admin.menus.common.dialogs import Error, Confirm
+from slafw.admin.menus.common.root import Root
 from slafw.functions.system import shut_down
 from slafw.libPrinter import Printer
 
 
-class NetUpdate(AdminMenu):
+class NetUpdate(Root):
     FIRMWARE_LIST_URL = "https://sl1.prusa3d.com/check-update"
 
     def __init__(self, control: AdminControl, printer: Printer):
-        super().__init__(control)
-        self._printer = printer
+        super().__init__(control, printer)
         self._status = "Downloading list of updates"
 
-        self.add_back()
         self.add_label("<b>Custom updates to latest dev builds</b>", "network-icon")
         self.add_item(AdminTextValue.from_property(self, NetUpdate.status, "sandclock_color"))
 

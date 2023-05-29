@@ -4,11 +4,11 @@
 
 from typing import Collection
 
-from slafw.libPrinter import Printer
 from slafw.admin.control import AdminControl
 from slafw.admin.items import AdminIntValue, AdminFloatValue, AdminBoolValue, AdminItem
-from slafw.admin.menus.settings.base import SettingsMenu
+from slafw.admin.menus.common.settings.base import SettingsMenu
 from slafw.configs.value import IntValue, FloatValue, BoolValue
+from slafw.libPrinter import Printer
 
 
 class HwConfigMenu(SettingsMenu):
@@ -22,8 +22,8 @@ class HwConfigMenu(SettingsMenu):
         super().__init__(control, printer)
         self._config = printer.hw.config
         self._warning = self.add_label(
-                "<b>WARNING! This is unrestricted raw edit of all config values.</b>",
-                "warning_white")
+            "<b>WARNING! This is unrestricted raw edit of all config values.</b>",
+            "warning_white")
         self.add_items(self._get_config_items())
 
     def _get_config_items(self) -> Collection[AdminItem]:

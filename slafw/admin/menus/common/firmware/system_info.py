@@ -12,20 +12,17 @@ import psutil
 from slafw import defines
 from slafw.admin.control import AdminControl
 from slafw.admin.items import AdminAction
-from slafw.admin.menu import AdminMenu
-from slafw.functions.system import get_octoprint_auth
+from slafw.admin.menus.common.root import Root
 from slafw.configs.stats import TomlConfigStats
+from slafw.functions.system import get_octoprint_auth
 from slafw.libPrinter import Printer
 
 
-class SystemInfoMenu(AdminMenu):
+class SystemInfoMenu(Root):
     # pylint: disable = too-many-instance-attributes
     def __init__(self, control: AdminControl, printer: Printer):
-        super().__init__(control)
-        self._printer = printer
+        super().__init__(control, printer)
         self._fans = {}
-
-        self.add_back()
 
         self.system_time = self.add_label(None, "time_color")
         self.system_uptime = self.add_label(None, "time_color")
@@ -81,17 +78,19 @@ class SystemInfoMenu(AdminMenu):
         self.mc_rev.set(f"MC revision: {self._printer.hw.mcBoardRevision}")
         self.eth_mac.set(f"Hardcoded eth MAC: {self._printer.hw.ethMac}")
         self.expo_panel_sn.set(f"Exposure panel serial: {self._printer.hw.exposure_screen.serial_number}")
-        self.expo_panel_resolution.set(f"Exposure panel resolution: {self._printer.hw.exposure_screen.parameters.width_px}x{self._printer.hw.exposure_screen.parameters.height_px} px")
-        self.expo_panel_transmittance.set(f"Exposure panel transmittance: {self._printer.hw.exposure_screen.transmittance} %")
+        self.expo_panel_resolution.set(
+            f"Exposure panel resolution: {self._printer.hw.exposure_screen.parameters.width_px}x{self._printer.hw.exposure_screen.parameters.height_px} px")
+        self.expo_panel_transmittance.set(
+            f"Exposure panel transmittance: {self._printer.hw.exposure_screen.transmittance} %")
         self.printer_model.set(f"Printer model: {self._printer.hw.printer_model.name}")
         self.api_key.set(f"API key: {get_octoprint_auth(self.logger)}")
         tilt_times_list = []
         lp = self._printer.layer_profiles
         for ep in self._printer.exposure_profiles:
             tilt_times_list.append(f"<li><ul>{ep.name}:"
-                f"<li>small fill: {lp[ep.small_fill_layer_profile].moves_time_ms / 1000} s</li>"
-                f"<li>large fill: {lp[ep.large_fill_layer_profile].moves_time_ms / 1000} s</li>"
-                "</ul></li>")
+                                   f"<li>small fill: {lp[ep.small_fill_layer_profile].moves_time_ms / 1000} s</li>"
+                                   f"<li>large fill: {lp[ep.large_fill_layer_profile].moves_time_ms / 1000} s</li>"
+                                   "</ul></li>")
         self.tilt_times.set(f"Tilt times: <ul>{''.join(tilt_times_list)}</ul>")
         self.uv_counter.set(f"UV LED counter: {timedelta(seconds=self._printer.hw.uv_led.usage_s)}")
         self.display_counter.set(f"Display counter: {timedelta(seconds=self._printer.hw.exposure_screen.usage_s)}")
@@ -109,7 +108,8 @@ class SystemInfoMenu(AdminMenu):
             if loop >= 5:
                 self.logger.debug("Updating system information")
                 self.system_time.set(f"System time: {datetime.now().strftime('%x %X')}")
-                self.system_uptime.set(f"System uptime: {':'.join(str(datetime.now() - datetime.fromtimestamp(psutil.boot_time())).split('.')[:1])}")
+                self.system_uptime.set(
+                    f"System uptime: {':'.join(str(datetime.now() - datetime.fromtimestamp(psutil.boot_time())).split('.')[:1])}")
                 self.net_state.set(f"Network state: {'online' if self._printer.inet.ip else 'offline'}")
                 self.net_dev.set(f"Net devices: {self._printer.inet.devices}")
                 self.resin_sensor.set(f"Resin sensor triggered: {self._printer.hw.getResinSensorState()}")

@@ -9,18 +9,10 @@ import pydbus
 
 from slafw import defines
 from slafw.admin.control import AdminControl
-from slafw.admin.items import AdminAction, AdminTextValue, AdminBoolValue, AdminLabel
-from slafw.admin.menus.dialogs import Error, Wait
+from slafw.admin.items import AdminAction, AdminTextValue, AdminLabel
+from slafw.admin.menus.common.dialogs import Error, Wait
 from slafw.admin.safe_menu import SafeAdminMenu
 from slafw.configs.runtime import RuntimeConfig
-from slafw.hardware.hardware import BaseHardware
-from slafw.states.wizard import WizardId
-from slafw.wizard.actions import UserActionBroker
-from slafw.wizard.checks.factory_reset import SendPrinterData
-from slafw.wizard.group import CheckGroup
-from slafw.wizard.setup import Configuration
-from slafw.wizard.wizard import Wizard
-from slafw.wizard.data_package import WizardDataPackage
 from slafw.errors.errors import FailedUpdateChannelSet
 from slafw.functions.system import (
     FactoryMountedRW,
@@ -29,9 +21,17 @@ from slafw.functions.system import (
     set_configured_printer_model,
     shut_down, reset_hostname,
 )
+from slafw.hardware.hardware import BaseHardware
+from slafw.hardware.printer_model import PrinterModel
 from slafw.libPrinter import Printer
 from slafw.state_actions.examples import Examples
-from slafw.hardware.printer_model import PrinterModel
+from slafw.states.wizard import WizardId
+from slafw.wizard.actions import UserActionBroker
+from slafw.wizard.checks.factory_reset import SendPrinterData
+from slafw.wizard.data_package import WizardDataPackage
+from slafw.wizard.group import CheckGroup
+from slafw.wizard.setup import Configuration
+from slafw.wizard.wizard import Wizard
 
 
 class SystemToolsMenu(SafeAdminMenu):
@@ -43,26 +43,6 @@ class SystemToolsMenu(SafeAdminMenu):
         self.systemd = pydbus.SystemBus().get(self.SYSTEMD_DBUS)
 
         self.add_back()
-        self.add_items(
-            (
-                AdminAction(
-                    "Update channel",
-                    lambda: self._control.enter(SetChannelMenu(self._control)),
-                    "support_color"
-                ),
-                AdminBoolValue.from_property(self, SystemToolsMenu.factory_mode, "factory_color"),
-                AdminBoolValue.from_property(self, SystemToolsMenu.ssh, "network-icon"),
-                AdminBoolValue.from_property(self, SystemToolsMenu.serial, "remote_control_color"),
-                AdminAction("Send wizard data", self._send_printer_data, "upload_cloud_color"),
-                AdminAction("Fake setup", self._fake_setup, "settings_color"),
-                AdminAction("Download examples", self._download_examples, "download"),
-            )
-        )
-        if self._printer.hw.printer_model == PrinterModel.SL1S:
-            self.add_item(AdminAction("Switch to M1", self._switch_m1, "cover_color"))
-        if self._printer.hw.printer_model == PrinterModel.M1:
-            self.add_item(AdminAction("Switch to SL1S", self._switch_sl1s, "cover_color"))
-
 
     @property
     def factory_mode(self) -> bool:

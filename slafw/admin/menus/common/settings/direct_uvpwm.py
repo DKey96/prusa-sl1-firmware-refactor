@@ -3,22 +3,20 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import json
-from datetime import datetime
-from threading import Thread
 from dataclasses import asdict
-from functools import partial
+from datetime import datetime
 
 from slafw import defines
-from slafw.libPrinter import Printer
 from slafw.admin.control import AdminControl
-from slafw.admin.items import AdminAction, AdminBoolValue, AdminIntValue, AdminLabel
+from slafw.admin.items import AdminLabel
+from slafw.admin.menus.common.dialogs import Info, Wait, Error
 from slafw.admin.safe_menu import SafeAdminMenu
-from slafw.admin.menus.dialogs import Info, Wait, Error
 from slafw.errors.errors import DisplayTransmittanceNotValid, CalculatedUVPWMNotInRange
-from slafw.functions.system import compute_uvpwm
 from slafw.functions import generate
-from slafw.libUvLedMeterMulti import UvLedMeterMulti
+from slafw.functions.system import compute_uvpwm
 from slafw.hardware.power_led_action import WarningAction
+from slafw.libPrinter import Printer
+from slafw.libUvLedMeterMulti import UvLedMeterMulti
 
 
 class DirectPwmSetMenu(SafeAdminMenu):
@@ -33,25 +31,6 @@ class DirectPwmSetMenu(SafeAdminMenu):
         self._uv_pwm_print = self._temp.uvPwmPrint
 
         self.add_back()
-        uv_pwm_item = AdminIntValue.from_value("UV LED PWM", self._temp, "uvPwm", 1, "uv_calibration")
-        uv_pwm_item.changed.connect(self._uv_pwm_changed)
-        uv_pwm_tune_item = AdminIntValue.from_value("UV LED PWM fine tune", self._temp, "uvPwmTune", 1, "change_color")
-        uv_pwm_tune_item.changed.connect(self._uv_pwm_changed)
-        self.uv_pwm_print_item = AdminLabel.from_property(self, DirectPwmSetMenu.uv_pwm_print, "system_info_color")
-        self.add_items(
-            (
-                AdminBoolValue.from_value("UV LED", self, "uv_led", "led_set_replacement"),
-                AdminAction("Open screen", self.open, "print_color"),
-                AdminAction("Close screen", self.close, "disabled_color"),
-                AdminAction("Calculate PWM from display transmittance", self.calculate_pwm, "statistics_color"),
-                self.uv_pwm_print_item,
-                uv_pwm_item,
-                uv_pwm_tune_item,
-                AdminLabel.from_property(self, DirectPwmSetMenu.status, "system_info_color"),
-                AdminAction("Show measured data", partial(self.show_calibration), "logs-icon"),
-            )
-        )
-        self._thread = Thread(target=self._measure)
 
     @property
     def status(self):

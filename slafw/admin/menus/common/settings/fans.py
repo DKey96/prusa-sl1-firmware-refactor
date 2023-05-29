@@ -2,16 +2,16 @@
 # Copyright (C) 2020-2022 Prusa Development a.s. - www.prusa3d.com
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from typing import Dict, Callable
-from threading import Thread
 from functools import partial
+from threading import Thread
 from time import sleep
+from typing import Dict, Callable
 
-from slafw.libPrinter import Printer
-from slafw.hardware.fan import Fan
 from slafw.admin.control import AdminControl
 from slafw.admin.items import AdminIntValue, AdminBoolValue, AdminLabel
-from slafw.admin.menus.settings.base import SettingsMenu
+from slafw.admin.menus.common.settings.base import SettingsMenu
+from slafw.hardware.fan import Fan
+from slafw.libPrinter import Printer
 
 
 class FansMenu(SettingsMenu):
@@ -23,43 +23,43 @@ class FansMenu(SettingsMenu):
         for idx, fan in self._fans.items():
             self._data[idx] = {}
             enabled = AdminBoolValue.from_value(
-                    f"{fan.name} fan enabled",
-                    fan,
-                    "enabled",
-                    "fan_color")
+                f"{fan.name} fan enabled",
+                fan,
+                "enabled",
+                "fan_color")
             enabled.changed.connect(self._get_callback(self._changed_enable, idx))
             self._data[idx]["en"] = enabled
             items.append(enabled)
 
             if fan.has_auto_control:
                 ac = AdminBoolValue.from_value(
-                        f"{fan.name} fan auto control",
-                        fan,
-                        "auto_control",
-                        "firmware-icon",
-                        enabled=fan.enabled)
+                    f"{fan.name} fan auto control",
+                    fan,
+                    "auto_control",
+                    "firmware-icon",
+                    enabled=fan.enabled)
                 ac.changed.connect(self._get_callback(self._changed_auto_control, idx))
                 self._data[idx]["ac"] = ac
                 items.append(ac)
 
             trpm = AdminIntValue(
-                    f"{fan.name} fan target RPM",
-                    partial(Fan.default_rpm.fget, fan), # type: ignore[attr-defined]
-                    partial(Fan.default_rpm.fset, fan), # type: ignore[attr-defined]
-                    100,
-                    "limit_color",
-                    enabled=fan.enabled and not fan.auto_control,
-                    minimum=fan.min_rpm,
-                    maximum=fan.max_rpm)
+                f"{fan.name} fan target RPM",
+                partial(Fan.default_rpm.fget, fan),  # type: ignore[attr-defined]
+                partial(Fan.default_rpm.fset, fan),  # type: ignore[attr-defined]
+                100,
+                "limit_color",
+                enabled=fan.enabled and not fan.auto_control,
+                minimum=fan.min_rpm,
+                maximum=fan.max_rpm)
             self._data[idx]["trpm"] = trpm
             items.append(trpm)
 
             run = AdminBoolValue.from_value(
-                    f"{fan.name} fan running",
-                    fan,
-                    "running",
-                    "turn_off_color",
-                    enabled=fan.enabled)
+                f"{fan.name} fan running",
+                fan,
+                "running",
+                "turn_off_color",
+                enabled=fan.enabled)
             self._data[idx]["run"] = run
             items.append(run)
 

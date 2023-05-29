@@ -2,16 +2,15 @@
 # Copyright (C) 2022 Prusa Development a.s. - www.prusa3d.com
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from slafw.libPrinter import Printer
 from slafw.admin.control import AdminControl
-from slafw.admin.menu import AdminMenu
+from slafw.admin.menus.common.root import Root
+from slafw.libPrinter import Printer
 
 
-class SettingsMenu(AdminMenu):
+class SettingsMenu(Root):
     def __init__(self, control: AdminControl, printer: Printer):
-        super().__init__(control)
+        super().__init__(control, printer)
         self._temp = printer.hw.config.get_writer()
-        self.add_back()
 
     def on_leave(self):
         self._temp.commit()

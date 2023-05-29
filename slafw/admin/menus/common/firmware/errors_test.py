@@ -7,18 +7,14 @@ from abc import abstractmethod
 
 from slafw.admin.control import AdminControl
 from slafw.admin.items import AdminAction
-from slafw.admin.menu import AdminMenu
-from slafw.libPrinter import Printer
+from slafw.admin.menus.common.root import Root
 from slafw.errors.tests import get_classes, get_instance
+from slafw.libPrinter import Printer
 
 
-class ExceptionTestMenu(AdminMenu):
-
+class ExceptionTestMenu(Root):
     def __init__(self, control: AdminControl, printer: Printer):
-        super().__init__(control)
-        self._printer = printer
-
-        self.add_back()
+        super().__init__(control, printer)
         self.add_items(self._get_items())
 
     @staticmethod
@@ -40,9 +36,9 @@ class ExceptionTestMenu(AdminMenu):
         items = []
         for _, cls in sorted(self._get_classes_list(), key=self._sort_classes):
             items.append(AdminAction(f"{cls.CODE.code} - {cls.CODE.title}\n{cls.__name__}",
-                functools.partial(self.do_error, cls),
-                self._get_icon())
-            )
+                                     functools.partial(self.do_error, cls),
+                                     self._get_icon())
+                         )
         return items
 
     def do_error(self, cls):
@@ -58,6 +54,7 @@ class WarningsTestMenu(ExceptionTestMenu):
     @staticmethod
     def _get_icon():
         return "warning_white"
+
 
 class ErrorsTestMenu(ExceptionTestMenu):
 
