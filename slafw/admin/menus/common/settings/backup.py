@@ -13,8 +13,8 @@ from shutil import copy2, copyfile, make_archive, unpack_archive
 from threading import Thread
 from time import sleep
 
-from slafw.hardware.tilt_profiles import TILT_CFG_LOCAL
-from slafw.hardware.tower_profiles import TOWER_CFG_LOCAL
+from slafw.hardware.sl1.tilt_profiles import TILT_CFG_LOCAL
+from slafw.hardware.sl1.tower_profiles import TOWER_CFG_LOCAL
 
 from slafw import defines
 from slafw.admin.control import AdminControl

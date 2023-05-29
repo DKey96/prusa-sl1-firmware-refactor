@@ -1,7 +1,7 @@
 # This file is part of the SLA firmware
 # Copyright (C) 2020-2023 Prusa Development a.s. - www.prusa3d.com
 # SPDX-License-Identifier: GPL-3.0-or-later
-from admin.menus.m1.only_m1_feature import OnlyM1FeatureRoot
+from slafw.admin.menus.m1.only_m1_feature import OnlyM1FeatureRoot
 
 from slafw.admin.control import AdminControl
 from slafw.admin.items import AdminAction

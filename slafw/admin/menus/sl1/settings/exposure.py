@@ -2,7 +2,7 @@
 # Copyright (C) 2020-2022 Prusa Development a.s. - www.prusa3d.com
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from slafw.admin.menus.sl1.settings.base import SettingsMenu
+from slafw.admin.menus.common.settings.base import SettingsMenu
 
 from slafw.admin.control import AdminControl
 from slafw.admin.items import AdminAction, AdminIntValue, AdminBoolValue, AdminFixedValue

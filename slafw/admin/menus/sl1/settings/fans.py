@@ -7,7 +7,7 @@ from threading import Thread
 from time import sleep
 from typing import Dict, Callable
 
-from slafw.admin.menus.sl1.settings.base import SettingsMenu
+from slafw.admin.menus.common.settings.base import SettingsMenu
 
 from slafw.admin.control import AdminControl
 from slafw.admin.items import AdminIntValue, AdminBoolValue, AdminLabel
